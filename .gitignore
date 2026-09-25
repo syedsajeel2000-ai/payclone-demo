@@ -1,0 +1,34 @@
+# Dependencies (this project has none, but stay safe)
+node_modules/
+
+# Secrets & local environment — NEVER commit
+.env
+.env.*
+!.env.example
+
+# Demo database / runtime data
+data/
+*.db
+*.sqlite
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Build output
+dist/
+build/
+.cache/
+
+# Vercel local state
+.vercel/
+
+.vercel
+.freebuff/

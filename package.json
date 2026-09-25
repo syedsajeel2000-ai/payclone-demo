@@ -1,0 +1,27 @@
+{
+  "name": "paypal-clone-demo",
+  "version": "1.0.0",
+  "description": "PayClone — a fully functional, PayPal-inspired educational demo payment platform (demo wallet, no real money).",
+  "main": "server.js",
+  "private": false,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node tests/api.test.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "paypal-clone",
+    "fintech",
+    "demo-wallet",
+    "payments-demo",
+    "web-development",
+    "education"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}
