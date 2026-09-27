@@ -413,6 +413,27 @@ export async function renderForgot(container) {
     setLoading(btn, true, 'Requesting…');
     try {
       const data = await api('/api/auth/forgot', { method: 'POST', body: { email } });
+      if (data.emailSent) {
+        result.innerHTML = `
+          <div class="card mt-16" style="border-color:#bfe8d0;background:var(--success-soft)">
+            <div class="row gap-8" style="align-items:flex-start;color:#075e31">
+              ${icon('info', 18)}
+              <div style="font-size:.88rem;line-height:1.6">
+                <strong>Check your inbox!</strong><br>
+                ${esc(data.message)}<br><br>
+                <span style="color:#4a5a70">Didn't get it? Check your spam folder, or:</span>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm mt-16" id="request-again" type="button">Send Again</button>
+          </div>
+        `;
+        qs('#request-again', result).addEventListener('click', () => {
+          result.innerHTML = '';
+          form.email.focus();
+        });
+        toast('success', 'Reset link emailed.');
+        return;
+      }
       result.innerHTML = `
         <div class="card mt-16" style="border-color:#bfe8d0;background:var(--success-soft)">
           <div class="row gap-8" style="align-items:flex-start;color:#075e31">
@@ -448,6 +469,44 @@ export async function renderForgot(container) {
       setLoading(btn, false);
     }
   });
+}
+
+/* =========================================================
+   VERIFY EMAIL — lands here from the emailed link
+   ========================================================= */
+export async function renderVerify(container, params) {
+  container.innerHTML = `
+    <div class="auth-wrap">
+      <div class="card auth-card reveal" style="text-align:center;padding:40px 32px">
+        <div id="verify-state">
+          <div class="spinner" style="margin:0 auto 16px"></div>
+          <h2 class="mb-8">Verifying your email…</h2>
+          <p class="muted">Just a moment.</p>
+        </div>
+      </div>
+    </div>
+  `;
+  const state = qs('#verify-state', container);
+  try {
+    const data = await api('/api/auth/verify', {
+      method: 'POST',
+      body: { token: params.token }
+    });
+    state.innerHTML = `
+      <div style="color:#0a8a44;margin-bottom:12px">${icon('shield', 44)}</div>
+      <h2 class="mb-8">Email verified!</h2>
+      <p class="muted mb-16">${esc(data.message || 'Your email is confirmed. Everything is ready.')}</p>
+      <a class="btn btn-primary btn-lg btn-block" href="#/login">Log in to your account</a>
+    `;
+    toast('success', 'Email verified — welcome aboard!');
+  } catch (err) {
+    state.innerHTML = `
+      <div style="color:#c2410c;margin-bottom:12px">${icon('alert', 44)}</div>
+      <h2 class="mb-8">Verification failed</h2>
+      <p class="muted mb-16">${esc(err.message || 'This link is invalid or has expired.')}</p>
+      <a class="btn btn-primary btn-lg btn-block" href="#/login">Back to login</a>
+    `;
+  }
 }
 
 /* =========================================================

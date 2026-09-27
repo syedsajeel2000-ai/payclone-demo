@@ -5,6 +5,39 @@ import { icon, esc, money, qs, toast, firstName, initials } from '../ui.js';
 import { txRowHtml, txEmptyHtml, bindTxRows } from '../transaction-view.js';
 import { refreshBell } from '../layout.js';
 
+/* Email-verification nudge: only shows when unverified; dismissible this session. */
+function renderVerifyBanner(container, user) {
+  const slot = qs('#verify-banner', container);
+  if (!slot || !user || user.emailVerified !== false || sessionStorage.getItem('verifyDismissed')) return;
+  slot.innerHTML = `
+    <div class="card row gap-12 reveal" style="align-items:center;border-color:#f2d492;background:#fff8e6;padding:14px 18px">
+      <span style="color:#b45309">${icon('alert', 20)}</span>
+      <div style="flex:1;font-size:.88rem;color:#5b430f;line-height:1.5">
+        <strong>Verify your email address.</strong>
+        We sent a confirmation link to ${esc(user.email)} when you signed up.
+      </div>
+      <button class="btn btn-primary btn-sm" id="resend-verify">Resend link</button>
+      <button class="btn btn-ghost btn-sm" id="dismiss-verify" aria-label="Dismiss">${icon('x', 16)}</button>
+    </div>
+  `;
+  qs('#resend-verify', slot).addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    try {
+      const r = await api('/api/auth/resend-verification', { method: 'POST', body: {} });
+      toast(r.emailSent ? 'success' : 'info', r.message);
+    } catch (err) {
+      toast('error', err.message || 'Could not resend.');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  qs('#dismiss-verify', slot).addEventListener('click', () => {
+    sessionStorage.setItem('verifyDismissed', '1');
+    slot.innerHTML = '';
+  });
+}
+
 function animateNumber(el, to) {
   const duration = 750;
   const start = performance.now();
@@ -42,6 +75,7 @@ export async function renderDashboard(container) {
         <button class="btn btn-outline btn-sm" id="dash-refresh">${icon('refresh', 15)} Refresh</button>
       </div>
     </div>
+    <div id="verify-banner"></div>
 
     <div class="grid grid-main-side">
       <div class="stack gap-16">
@@ -157,6 +191,7 @@ export async function renderDashboard(container) {
       store.setUser(data.user);
       store.setPrefs(data.preferences);
       qs('#dash-name', container).textContent = firstName(data.user.fullName);
+      renderVerifyBanner(container, data.user);
       animateNumber(qs('#dash-balance', container), data.balance);
       qs('#dash-sent', container).textContent = money(data.totalSent);
       qs('#dash-received', container).textContent = money(data.totalReceived);

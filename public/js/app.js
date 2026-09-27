@@ -17,6 +17,7 @@ import { renderSecurity } from './pages/security.js';
 import { renderNotifications } from './pages/notifications.js';
 import { renderHelp } from './pages/help.js';
 import { renderPayRequest } from './pages/payrequest.js';
+import { renderVerify } from './pages/auth.js';
 import { renderNotFound } from './pages/notfound.js';
 
 const ROUTES = [
@@ -25,6 +26,7 @@ const ROUTES = [
   { path: '/signup', view: renderSignup, type: 'guest', title: 'Sign Up' },
   { path: '/forgot', view: renderForgot, type: 'guest', title: 'Forgot Password' },
   { path: '/reset/:token', view: renderReset, type: 'guest', title: 'Reset Password' },
+  { path: '/verify/:token', view: renderVerify, type: 'guest', title: 'Verify Email' },
   { path: '/dashboard', view: renderDashboard, type: 'app', title: 'Dashboard' },
   { path: '/wallet', view: renderWallet, type: 'app', title: 'Wallet' },
   { path: '/send', view: renderSend, type: 'app', title: 'Send Money' },
