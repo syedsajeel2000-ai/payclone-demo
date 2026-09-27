@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const { PORT, NODE_ENV, loadDotEnv } = require('./lib/config');
 const { handleApi } = require('./lib/api');
+const db = require('./lib/db');
 
 loadDotEnv(path.join(__dirname, '.env'));
 
@@ -53,6 +54,7 @@ function serveFile(req, res, filePath, cacheable) {
 
 const requestHandler = async (req, res) => {
   try {
+    await db.prime(); // hydrate persistent store (redis) before serving
     const url = new URL(req.url, 'http://localhost');
     const pathname = decodeURIComponent(url.pathname);
 
