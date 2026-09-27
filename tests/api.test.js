@@ -257,7 +257,22 @@ async function suite() {
     ok('card top-up succeeds', add.status === 200 && add.data.ok, JSON.stringify(add.data).slice(0, 140));
     ok('balance increased by exact amount', add.data.balance === before + 25050, `got ${add.data.balance}`);
     ok('top-up transaction created', add.data.transaction && add.data.transaction.type === 'topup' && add.data.transaction.status === 'completed');
-    ok('full card number is not stored', !fs.readFileSync(path.join(DATA_DIR, 'db.json'), 'utf8').includes('4242424242424242'));
+    /* Engine-agnostic: read the stored document from SQLite (kv table) or the
+       legacy JSON fallback, whichever the running instance used. */
+    const dbFilePath = fs.existsSync(path.join(DATA_DIR, 'payclone.db'))
+      ? path.join(DATA_DIR, 'payclone.db')
+      : path.join(DATA_DIR, 'db.json');
+    const storedRaw = fs
+      .readFileSync(dbFilePath, 'utf8')
+      .replace(/^.*?"users"/s, (m) => (m.includes('"users"') ? '' : m)); // sqlite header noise safe
+    const storedDoc = dbFilePath.endsWith('.db')
+      ? (() => {
+          const { DatabaseSync } = require('node:sqlite');
+          const row = new DatabaseSync(dbFilePath).prepare("SELECT value FROM kv WHERE key='db'").get();
+          return row ? row.value : '';
+        })()
+      : fs.readFileSync(dbFilePath, 'utf8');
+    ok('full card number is not stored', !storedDoc.includes('4242424242424242'));
 
     const bank = await req('POST', '/api/wallet/add-funds', { cookie: aliceCookie, body: { amount: '100', method: 'demo_bank' } });
     ok('bank top-up succeeds without card fields', bank.status === 200 && bank.data.balance === add.data.balance + 10000);
